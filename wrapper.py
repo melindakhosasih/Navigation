@@ -16,13 +16,15 @@ class NavEnv():
         self.env = Simulator(dt=self.dt)
         self.env.state.pos = self.random_position()
         self.env.state.rotation = 360 * np.random.random()
+        dist = 500
+        while(dist > 300): 
+            # Initialize Goal Position
+            self.goal = self.random_position()
 
-        # Initialize Goal Position
-        self.goal = self.random_position()
-
-        # Compute Relative Pose
-        relative_pose = get_relative_pose(self.env.state.pos.x, self.env.state.pos.y, self.env.state.rotation, self.goal.x, self.goal.y)
-        self.goal_dist = relative_pose[0]
+            # Compute Relative Pose
+            relative_pose = get_relative_pose(self.env.state.pos, self.env.state.rotation, self.goal)
+            self.goal_dist = relative_pose[0]
+            dist = self.goal_dist
         
         # Get State
         state = self._construct_state(relative_pose)
@@ -45,6 +47,8 @@ class NavEnv():
         if gui:
             cv2.imshow("demo", img)
             cv2.waitKey(1)
+
+        return img.copy()
         
     def step(self, cmd):
         """
@@ -70,7 +74,7 @@ class NavEnv():
         """
         # Get next state (position info and velocity)
         state = self.env.step(ControlState(self.sim_type, (cmd[0]+1) * self.env.v_range, cmd[1] * self.env.w_range))
-        relative_pose = get_relative_pose(state.pos.x, state.pos.y, state.rotation, self.goal.x, self.goal.y)
+        relative_pose = get_relative_pose(self.env.state.pos, self.env.state.rotation, self.goal)
         state_next = self._construct_state(relative_pose)
 
         # Compute reward
@@ -91,16 +95,31 @@ class NavEnv():
         # Total Reward
         reward = 0.2 * reward_dist - 0.1 * reward_orien
 
+        # Check Boundary
+        collision = False
+        if self.env.state.pos.x < 0 or self.env.state.pos.y < 0 or \
+            self.env.state.pos.x > self.map.shape[1] or self.env.state.pos.y > self.map.shape[0]:
+            collision = True
+
+        # Check if arrive at goal or out of boundary
         done = False
-        if curr_dist > 5:
-            reward += -0.1
-        elif curr_dist < 0.1:
+        if curr_dist < 10:
             reward = 20
             done = True
+        elif curr_dist > 500:
+            reward += -0.1
+        elif collision:
+            reward = -2
+            done = True
 
+        # Update distance
+        self.goal_dist = curr_dist
         return state_next, reward, done
 
     def _construct_state(self, relative_pose):
+        state = relative_pose.copy()
+        state[0] = relative_pose[0] / 100
+        state[1] = np.deg2rad(relative_pose[1]) 
         return relative_pose
     
 if __name__ == "__main__":
