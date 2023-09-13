@@ -1,5 +1,5 @@
 import numpy as np
-from typing import Optional
+from typing import Optional, Tuple
 
 class ControlState():
     def __init__(self, type, *cstate):
@@ -65,7 +65,7 @@ class Position():
 def paste_overlapping_image(
     background: np.ndarray,
     foreground: np.ndarray,
-    location: tuple[int, int],
+    location: Tuple[int, int],
     mask: Optional[np.ndarray] = None,
 ):
     r"""Composites the foreground onto the background dealing with edge
@@ -141,9 +141,9 @@ def paste_overlapping_image(
 
     return background
 
-def get_relative_pose(x1, y1, orien, x2, y2):
-    dist = np.sqrt((x1 - x2)**2 + (y1 - y2)**2)
-    dist /= 100
+def get_relative_pose(agent, orien, goal):
+    dist = np.sqrt((agent.x - goal.x)**2 + (agent.y - goal.y)**2)
+    # dist /= 100
     # Question, use rad or deg?
-    deg = (np.rad2deg(np.arctan2(y2-y1, x2-x1)) - orien) % 360
+    deg = (np.rad2deg(np.arctan2(goal.y-agent.y, goal.x-agent.x)) - orien) % 360
     return [dist, deg]
