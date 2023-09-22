@@ -2,6 +2,7 @@ import os
 import cv2
 import numpy as np
 import argparse
+import matplotlib.pyplot as plt
 
 from simulator.basic import BasicSimulator as Simulator
 from simulator.utils import ControlState, Position, get_relative_pose
@@ -137,6 +138,9 @@ class NavEnv():
         total_step = 0
         max_success_rate = 0
         success_count = 0
+        total_succ_rate = []
+        overall_succ_rate = []
+        succ_rate_split = []
         for eps in range(episode):
             state = self.initialize()
             step = 0
@@ -176,13 +180,22 @@ class NavEnv():
                     # Count the successful times
                     if reward > 5:
                         success_count += 1
+                        total_succ_rate.append(1)
+                    else:
+                        total_succ_rate.append(0)
                     print()
                     break
+            
+            overall_succ_rate.append(np.mean(total_succ_rate))
+            succ_rate_split.append(np.mean(total_succ_rate[-eval_eps:]))
+
+            self.plot_fig(overall_succ_rate, succ_rate_split, model_path, eval_eps)
 
             if eps>0 and eps%eval_eps==0:
                 # Sucess rate
                 success_rate = success_count / eval_eps
                 success_count = 0
+
                 # Save the best model
                 if success_rate >= max_success_rate:
                     max_success_rate = success_rate
@@ -232,14 +245,20 @@ class NavEnv():
         if gif_path is not None:
             images[0].save(gif_path+gif_name,
                 save_all=True, append_images=images[1:], optimize=True, duration=40, loop=0)
-
+    
     def _construct_state(self, relative_pose):
-        state = relative_pose.copy()
-        state[1] = np.deg2rad(state[1])
-        state = [relative_pose[0]*np.cos(state[1]), relative_pose[0]*np.sin(state[1])]
-        state[0] /= 5
-        state[1] /= 5
-        return state
+        return [relative_pose[0]/10, np.cos(np.deg2rad(relative_pose[1])), np.sin(np.deg2rad(relative_pose[1]))]
+
+    def plot_fig(self, overall_succ_rate, succ_rate_split, model_path, eval_eps):
+        plt.plot(overall_succ_rate, label="Overall Training Succ")
+        plt.plot(succ_rate_split, label=f"Avg of {eval_eps} Episodes", linestyle='--')
+
+        plt.xlabel('Episode')
+        plt.ylabel('Succ')
+        plt.legend()
+
+        plt.savefig(f'{model_path}/training.png')
+        plt.close()
     
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
