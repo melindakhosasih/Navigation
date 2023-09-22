@@ -9,7 +9,7 @@ from agents.basic import BasicAgent
 
 class BasicSimulator(Simulator):
     def __init__(self,
-                 v_range=40,
+                 v_range=60,
                  w_range=45,
                  dt=0.1):
         # Initialize Agent
@@ -49,8 +49,10 @@ class BasicSimulator(Simulator):
         if cmd is not None:
             # self.cstate.v = cmd.v if cmd.v is not None else self.cstate.v
             self.cstate.v = cmd.v if cmd.v is not None else 0
+            # self.cstate.v = cmd.v
             # self.cstate.w = cmd.w if cmd.w is not None else self.cstate.w
             self.cstate.w = cmd.w if cmd.w is not None else 0
+            # self.cstate.w = cmd.w
 
         # Control Constraint
         if self.cstate.v > self.v_range:
