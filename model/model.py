@@ -148,7 +148,7 @@ class DDPG():
 class PolicyNet(nn.Module):
     def __init__(self):
         super(PolicyNet, self).__init__()
-        self.fc1 = nn.Linear(2, 512)
+        self.fc1 = nn.Linear(3, 512)
         self.fc2 = nn.Linear(512, 512)
         self.fc3 = nn.Linear(512, 512)
         self.fc4 = nn.Linear(512, 2)
@@ -167,7 +167,7 @@ epsilon = 1e-6
 class PolicyNetGaussian(nn.Module):
     def __init__(self):
         super(PolicyNetGaussian, self).__init__()
-        self.fc1 = nn.Linear(2, 512)
+        self.fc1 = nn.Linear(3, 512)
         self.fc2 = nn.Linear(512, 512)
         self.fc3 = nn.Linear(512, 512)
         self.fc4_mean = nn.Linear(512, 2)
@@ -198,7 +198,7 @@ class PolicyNetGaussian(nn.Module):
 class QNet(nn.Module):
     def __init__(self):
         super(QNet, self).__init__()
-        self.fc1 = nn.Linear(2, 512)
+        self.fc1 = nn.Linear(3, 512)
         self.fc2 = nn.Linear(512+2, 512)
         self.fc3 = nn.Linear(512, 512)
         self.fc4 = nn.Linear(512, 1)
