@@ -1,3 +1,4 @@
+import os
 import cv2
 import numpy as np
 import argparse
@@ -5,26 +6,41 @@ import argparse
 from simulator.basic import BasicSimulator as Simulator
 from simulator.utils import ControlState, Position, get_relative_pose
 
+from PIL import Image
+
+import model.model as model
+
 class NavEnv():
-    def __init__(self, dt=0.1, type="basic") -> None:
-        self.map = np.ones((512, 512, 3))
+    def __init__(
+            self,
+            model,
+            # model=model.DDPG(
+            #     model = [model.PolicyNet, model.QNet],
+            #     learning_rate = [0.0001, 0.0001],
+            #     reward_decay = 0.99,
+            #     memory_size = 10000,
+            #     batch_size = 64)
+            map=None,
+            dt=0.1,
+            type="basic",
+        ) -> None:
+        self.map = np.asarray(map) if map is not None else np.ones((512, 512, 3))
         self.dt = dt
         self.sim_type = type
+        self.model = model
 
     def initialize(self):
         # Initialize Agent Position
         self.env = Simulator(dt=self.dt)
         self.env.state.pos = self.random_position()
         self.env.state.rotation = 360 * np.random.random()
-        dist = 500
-        while(dist > 300): 
-            # Initialize Goal Position
-            self.goal = self.random_position()
 
-            # Compute Relative Pose
-            relative_pose = get_relative_pose(self.env.state.pos, self.env.state.rotation, self.goal)
-            self.goal_dist = relative_pose[0]
-            dist = self.goal_dist
+        # Initialize Goal Position
+        self.goal = self.random_position()
+
+        # Compute Relative Pose
+        relative_pose = get_relative_pose(self.env.state.pos, self.env.state.rotation, self.goal)
+        self.goal_dist = relative_pose[0]
         
         # Get State
         state = self._construct_state(relative_pose)
@@ -73,7 +89,7 @@ class NavEnv():
             - relative_pose[1] : degree (in 360, not radian)
         """
         # Get next state (position info and velocity)
-        state = self.env.step(ControlState(self.sim_type, (cmd[0]+1) * self.env.v_range, cmd[1] * self.env.w_range))
+        self.env.step(ControlState(self.sim_type, (cmd[0]+1)/2 * self.env.v_range, cmd[1] * self.env.w_range))
         relative_pose = get_relative_pose(self.env.state.pos, self.env.state.rotation, self.goal)
         state_next = self._construct_state(relative_pose)
 
@@ -83,6 +99,7 @@ class NavEnv():
         
         # Distance Reward
         reward_dist = self.goal_dist - curr_dist
+        reward_dist *= 100
 
         # Orientation Reward
         while curr_deg > 180:
@@ -103,11 +120,11 @@ class NavEnv():
 
         # Check if arrive at goal or out of boundary
         done = False
-        if curr_dist < 10:
+        if curr_dist < 0.1:
             reward = 20
             done = True
-        elif curr_dist > 500:
-            reward += -0.1
+        # elif curr_dist > 5:
+        #     reward += -0.1
         elif collision:
             reward = -2
             done = True
@@ -115,12 +132,114 @@ class NavEnv():
         # Update distance
         self.goal_dist = curr_dist
         return state_next, reward, done
+    
+    def train(self, model_path, episode=1001, batch_size=64, eval_eps=50):
+        total_step = 0
+        max_success_rate = 0
+        success_count = 0
+        for eps in range(episode):
+            state = self.initialize()
+            step = 0
+            loss_a = loss_c = 0
+            total_reward = 0.
+            
+            while True:
+                # Choose action
+                action = self.model.choose_action(state, eval=False)
+
+                # Step
+                state_next, reward, done = self.step(action)
+
+                # Store
+                end = 0 if done else 1
+                self.model.store_transition(state, action, reward, state_next, end)
+
+                # Render
+                # self.render(gui=False)
+
+                # Learn
+                loss_a = loss_c = 0.
+                if total_step > batch_size:
+                    loss_a, loss_c = self.model.learn()
+
+                step += 1
+                total_step += 1
+                total_reward += reward
+                print(f"\rEps:{eps:3d} /{step:4d} /{total_step:6d}| "
+                      f"action:{action[0]:+.2f}| R:{reward:+.2f}| "
+                      f"Loss:[A>{loss_a:+.2f} C>{loss_c:+.2f}]| "
+                      f"Epsilon: {self.model.epsilon:.3f}| "
+                      f"Ravg:{total_reward/step:.2f}", end='')
+
+                state = state_next.copy()
+                if done or step>300:
+                    # Count the successful times
+                    if reward > 5:
+                        success_count += 1
+                    print()
+                    break
+
+            if eps>0 and eps%eval_eps==0:
+                # Sucess rate
+                success_rate = success_count / eval_eps
+                success_count = 0
+                # Save the best model
+                if success_rate >= max_success_rate:
+                    max_success_rate = success_rate
+                    print("Save model to " + model_path)
+                    self.model.save_load_model("save", model_path)
+                print(f"Success Rate (current/max): {success_rate}/{max_success_rate}")
+                # output GIF
+                self.eval(self.model, total_eps=4, gif_path=model_path+"/gif/", gif_name="ddpg_"+str(eps).zfill(4)+".gif", message=True)
+
+    def eval(self, model, gif_path, gif_name, total_eps=4, message=False):
+        if not os.path.exists(gif_path):
+            os.makedirs(gif_path)
+
+        images = []
+        for eps in range(total_eps):
+            state = self.initialize()
+            step = 0
+            total_reward = 0.
+            while True:
+                # Choose action
+                action = self.model.choose_action(state, eval=False)
+
+                # Step
+                state_next, reward, done = self.step(action)
+
+                # Render
+                img = self.render(gui=False)
+                img = Image.fromarray(cv2.cvtColor(np.uint8(img*255),cv2.COLOR_BGR2RGB))
+                images.append(img)
+
+                total_reward += reward
+
+                if message:
+                    print(f"\rEps:{eps:2d} /{step:4d} | action:{action[0]:+.2f}| "
+                          f"R:{reward:+.2f} | Total R:{total_reward:.2f}", end='')
+
+                state = state_next.copy()
+                step += 1
+
+                if done or step>300:
+                    # Count the successful times
+                    if message:
+                        print()
+                    break
+
+        print("Save evaluation GIF ...")
+        if gif_path is not None:
+            images[0].save(gif_path+gif_name,
+                save_all=True, append_images=images[1:], optimize=True, duration=40, loop=0)
 
     def _construct_state(self, relative_pose):
         state = relative_pose.copy()
-        state[0] = relative_pose[0] / 100
-        state[1] = np.deg2rad(relative_pose[1]) 
-        return relative_pose
+        state[1] = np.deg2rad(state[1])
+        state = [relative_pose[0]*np.cos(state[1]), relative_pose[0]*np.sin(state[1])]
+        state[0] /= 5
+        state[1] /= 5
+        return state
     
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
@@ -130,7 +249,15 @@ if __name__ == "__main__":
     mode = ["random", "manual"]
     type = mode[args.mode]
 
-    env = NavEnv()
+    model = model.DDPG(
+        model = [model.PolicyNet, model.QNet],
+            learning_rate = [0.0001, 0.0001],
+            reward_decay = 0.99,
+            memory_size = 10000,
+            batch_size = 64
+    )
+
+    env = NavEnv(model=model)
     for i in range(5):
         env.initialize()
         while True:
@@ -159,6 +286,7 @@ if __name__ == "__main__":
             state_next, reward, done = env.step(action)
             # print the state after env.step
             # print(env.env, end="\r")
+            # print(env.env)
 
             # print(state_next, reward, done, end="\r")
             env.render(gui=True)

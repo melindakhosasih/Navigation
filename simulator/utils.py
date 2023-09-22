@@ -141,9 +141,16 @@ def paste_overlapping_image(
 
     return background
 
+# def get_relative_pose(agent, orien, goal):
+#     dist = np.sqrt((agent.x - goal.x)**2 + (agent.y - goal.y)**2)
+#     # dist /= 100
+#     # Question, use rad or deg?
+#     deg = (np.rad2deg(np.arctan2(goal.y-agent.y, goal.x-agent.x)) - orien) % 360
+#     return [dist, deg]
+
 def get_relative_pose(agent, orien, goal):
     dist = np.sqrt((agent.x - goal.x)**2 + (agent.y - goal.y)**2)
-    # dist /= 100
     # Question, use rad or deg?
-    deg = (np.rad2deg(np.arctan2(goal.y-agent.y, goal.x-agent.x)) - orien) % 360
-    return [dist, deg]
+    rad = np.arctan2(goal.y-agent.y, goal.x-agent.x) - np.deg2rad(orien)
+    deg = np.rad2deg(rad)
+    return [dist/100, deg]
