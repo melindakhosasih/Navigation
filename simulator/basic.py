@@ -9,7 +9,7 @@ from agents.basic import BasicAgent
 
 class BasicSimulator(Simulator):
     def __init__(self,
-                 v_range=60,
+                 v_range=25,
                  w_range=45,
                  dt=0.1):
         # Initialize Agent

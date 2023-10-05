@@ -245,6 +245,14 @@ class NavEnv():
         if gif_path is not None:
             images[0].save(gif_path+gif_name,
                 save_all=True, append_images=images[1:], optimize=True, duration=40, loop=0)
+
+    # def _construct_state(self, relative_pose):
+    #     state = relative_pose.copy()
+    #     state[1] = np.deg2rad(state[1])
+    #     state = [relative_pose[0]*np.cos(state[1]), relative_pose[0]*np.sin(state[1])]
+    #     state[0] /= 5
+    #     state[1] /= 5
+    #     return state
     
     def _construct_state(self, relative_pose):
         return [relative_pose[0]/10, np.cos(np.deg2rad(relative_pose[1])), np.sin(np.deg2rad(relative_pose[1]))]
