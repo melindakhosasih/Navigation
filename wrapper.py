@@ -98,7 +98,7 @@ class NavEnv():
         # Compute reward
         curr_dist = relative_pose[0]
         curr_deg = relative_pose[1]
-        
+        # print(relative_pose, end="\r")
         # Distance Reward
         reward_dist = self.goal_dist - curr_dist
         reward_dist *= 100
@@ -145,7 +145,7 @@ class NavEnv():
         turn_action = 1 * turn  # turn right
 
         if action[1] < 0:   # turn left
-            turn_action *= 1
+            turn_action *= -1
 
         forward_action = forward * 0.1
         return [forward_action, turn_action]
@@ -317,17 +317,17 @@ if __name__ == "__main__":
                     action = [1, 0]
                 elif key == ord("a") or key == ord("A"):
                     # print("turn left")
-                    action = [0, -1*20]
+                    action = [-1, -1]
                 elif key == ord("s") or key == ord("S"):
                     # print("move backward")
                     action = [0, 0]
                 elif key == ord("d") or key == ord("D"):
                     # print("turn right")
-                    action = [0, 1*20]
+                    action = [-1, 1]
                 else:
-                    action = [0, 0]
+                    action = [-1, 0]
 
-            state_next, reward, done = env.step(action)
+            state_next, reward, done = env.step(env.translate_action(action))
             # print the state after env.step
             # print(env.env, end="\r")
             # print(env.env)
