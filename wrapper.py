@@ -236,7 +236,7 @@ class NavEnv():
                 action = self.model.choose_action(state, eval=False)
 
                 # Step
-                state_next, reward, done = self.step(action)
+                state_next, reward, done = self.step(self.translate_action(action))
 
                 # Render
                 img = self.render(gui=False)
@@ -320,7 +320,7 @@ if __name__ == "__main__":
                     action = [-1, -1]
                 elif key == ord("s") or key == ord("S"):
                     # print("move backward")
-                    action = [0, 0]
+                    action = [-1, 0]
                 elif key == ord("d") or key == ord("D"):
                     # print("turn right")
                     action = [-1, 1]
