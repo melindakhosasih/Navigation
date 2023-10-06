@@ -22,7 +22,7 @@ class NavEnv():
             #     memory_size = 10000,
             #     batch_size = 64)
             map=None,
-            dt=0.1,
+            dt=1,
             type="basic",
         ) -> None:
         self.map = np.asarray(map) if map is not None else np.ones((512, 512, 3))
@@ -90,7 +90,8 @@ class NavEnv():
             - relative_pose[1] : degree (in 360, not radian)
         """
         # Get next state (position info and velocity)
-        self.env.step(ControlState(self.sim_type, (cmd[0]+1)/2 * self.env.v_range, cmd[1] * self.env.w_range))
+        # self.env.step(ControlState(self.sim_type, (cmd[0]+1)/2 * self.env.v_range, cmd[1] * self.env.w_range))
+        self.env.step(ControlState(self.sim_type, cmd[0], cmd[1]))
         relative_pose = get_relative_pose(self.env.state.pos, self.env.state.rotation, self.goal)
         state_next = self._construct_state(relative_pose)
 
@@ -134,6 +135,21 @@ class NavEnv():
         self.goal_dist = curr_dist
         return state_next, reward, done
     
+    def translate_action(self, action):
+        velocity = (action[0] + 1) / 2
+        forward = round(velocity / 0.01)
+        
+        # count = abs(int(angular_velocity / 10))
+        turn = abs(round(action[1] / 0.1))
+
+        turn_action = 1 * turn  # turn right
+
+        if action[1] < 0:   # turn left
+            turn_action *= 1
+
+        forward_action = forward * 0.1
+        return [forward_action, turn_action]
+    
     def train(self, model_path, episode=1001, batch_size=64, eval_eps=50):
         total_step = 0
         max_success_rate = 0
@@ -152,7 +168,7 @@ class NavEnv():
                 action = self.model.choose_action(state, eval=False)
 
                 # Step
-                state_next, reward, done = self.step(action)
+                state_next, reward, done = self.step(self.translate_action(action))
 
                 # Store
                 end = 0 if done else 1
@@ -170,7 +186,8 @@ class NavEnv():
                 total_step += 1
                 total_reward += reward
                 print(f"\rEps:{eps:3d} /{step:4d} /{total_step:6d}| "
-                      f"action:{action[0]:+.2f}| R:{reward:+.2f}| "
+                      f"action_v:{action[0]:+.2f}| action_w:{action[1]:+.2f}| "
+                      f"R:{reward:+.2f}| "
                       f"Loss:[A>{loss_a:+.2f} C>{loss_c:+.2f}]| "
                       f"Epsilon: {self.model.epsilon:.3f}| "
                       f"Ravg:{total_reward/step:.2f}", end='')
@@ -300,15 +317,15 @@ if __name__ == "__main__":
                     action = [1, 0]
                 elif key == ord("a") or key == ord("A"):
                     # print("turn left")
-                    action = [-1, -1]
+                    action = [0, -1*20]
                 elif key == ord("s") or key == ord("S"):
                     # print("move backward")
-                    action = [-1, 0]
+                    action = [0, 0]
                 elif key == ord("d") or key == ord("D"):
                     # print("turn right")
-                    action = [-1, 1]
+                    action = [0, 1*20]
                 else:
-                    action = [-1, 0]
+                    action = [0, 0]
 
             state_next, reward, done = env.step(action)
             # print the state after env.step
