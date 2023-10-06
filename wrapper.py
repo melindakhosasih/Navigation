@@ -140,7 +140,7 @@ class NavEnv():
         forward = round(velocity / 0.01)
         
         # count = abs(int(angular_velocity / 10))
-        turn = abs(round(action[1] / 0.1))
+        turn = abs(round(action[1] / 0.2))
 
         turn_action = 1 * turn  # turn right
 
