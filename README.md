@@ -7,7 +7,7 @@ Tested in Python 3.11.4
 
 ## Environment Demo
 
-    python wrapper.py
+    python wrapper.py --mode 0
 
 ## Train
 
