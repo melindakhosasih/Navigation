@@ -37,7 +37,7 @@ class NavEnv():
         self.env.state.rotation = 360 * np.random.random()
         self.goal_dist = 0
         relative_pose = []
-        while(self.goal_dist <= 1 or self.goal_dist > 3):
+        while(self.goal_dist <= 1.5 or self.goal_dist > 3):
 
             # Initialize Goal Position
             self.goal = self.random_position()
