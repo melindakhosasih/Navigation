@@ -110,7 +110,7 @@ class NavEnv():
         # Orientation Reward
         while curr_deg > 180:
             curr_deg -= 360
-        while curr_deg < - 180:
+        while curr_deg < -180:
             curr_deg += 360
 
         reward_orien = np.deg2rad(abs(curr_deg))
@@ -119,7 +119,7 @@ class NavEnv():
         # reward_act = 0.05 if cmd[0] < -0.5 else 0
         # Total Reward
         # reward = 0.1*reward_dist - 0.1*reward_orien - reward_act
-        reward = 0.2 * reward_dist - 0.1 * reward_orien
+        reward = 0.1 * reward_dist - 0.1 * reward_orien
 
         # Check Boundary
         collision = False
@@ -146,7 +146,7 @@ class NavEnv():
         velocity = (action[0] + 1) / 2
         forward = round(velocity / 0.01)
         
-        turn = abs(round(action[1] / 0.05))
+        turn = abs(round(action[1] / 0.1))
 
         turn_action = 1 * turn  # turn right
 
