@@ -195,7 +195,7 @@ class NavEnv():
                       f"Ravg:{total_reward/step:.2f}", end='')
 
                 state = state_next.copy()
-                if done or step>300:
+                if done or step>100:
                     # Count the successful times
                     if reward > 5:
                         success_count += 1
@@ -254,7 +254,7 @@ class NavEnv():
                 state = state_next.copy()
                 step += 1
 
-                if done or step>300:
+                if done or step>100:
                     # Count the successful times
                     if message:
                         print()
