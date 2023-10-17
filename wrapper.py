@@ -116,10 +116,10 @@ class NavEnv():
         reward_orien = np.deg2rad(abs(curr_deg))
 
         # Action Penalty
-        # reward_act = 0.05 if cmd[0] < -0.5 else 0
+        reward_act = 0.05 if cmd[0] < -0.5 else 0
         # Total Reward
-        # reward = 0.1*reward_dist - 0.1*reward_orien - reward_act
-        reward = 0.1 * reward_dist - 0.1 * reward_orien
+        reward = 0.1*reward_dist - 0.1*reward_orien - reward_act
+        # reward = 0.1 * reward_dist - 0.1 * reward_orien
 
         # Check Boundary
         collision = False
