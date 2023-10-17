@@ -35,14 +35,17 @@ class NavEnv():
         self.env = Simulator(dt=self.dt)
         self.env.state.pos = self.random_position()
         self.env.state.rotation = 360 * np.random.random()
+        self.goal_dist = 0
+        relative_pose = []
+        while(self.goal_dist <= 1 or self.goal_dist > 3):
 
-        # Initialize Goal Position
-        self.goal = self.random_position()
+            # Initialize Goal Position
+            self.goal = self.random_position()
 
-        # Compute Relative Pose
-        relative_pose = get_relative_pose(self.env.state.pos, self.env.state.rotation, self.goal)
-        self.goal_dist = relative_pose[0]
-        
+            # Compute Relative Pose
+            relative_pose = get_relative_pose(self.env.state.pos, self.env.state.rotation, self.goal)
+            self.goal_dist = relative_pose[0]
+
         # Get State
         state = self._construct_state(relative_pose)
         return state
@@ -56,7 +59,7 @@ class NavEnv():
     def render(self, gui=False):
         img = self.map.copy()
         # Draw Target
-        cv2.circle(img, (int(1*self.goal.x), int(1*self.goal.y)), 15, (0, 0, 1), 2)
+        cv2.circle(img, (int(1*self.goal.x), int(1*self.goal.y)), 100, (0, 0, 1), 2)
         
         # Render Agemt and Trajectory
         self.env.render(img)
@@ -122,14 +125,14 @@ class NavEnv():
 
         # Check if arrive at goal or out of boundary
         done = False
-        if curr_dist < 0.1:
+        if curr_dist < 1:
             reward = 20
             done = True
         # elif curr_dist > 5:
         #     reward += -0.1
-        elif collision:
-            reward = -2
-            done = True
+        # elif collision:
+        #     reward = -2
+        #     done = True
 
         # Update distance
         self.goal_dist = curr_dist
@@ -139,8 +142,7 @@ class NavEnv():
         velocity = (action[0] + 1) / 2
         forward = round(velocity / 0.01)
         
-        # count = abs(int(angular_velocity / 10))
-        turn = abs(round(action[1] / 0.2))
+        turn = abs(round(action[1] / 0.1))
 
         turn_action = 1 * turn  # turn right
 
@@ -272,6 +274,7 @@ class NavEnv():
     #     return state
     
     def _construct_state(self, relative_pose):
+        # print("relative pose", relative_pose, end="\r")
         return [relative_pose[0]/10, np.cos(np.deg2rad(relative_pose[1])), np.sin(np.deg2rad(relative_pose[1]))]
 
     def plot_fig(self, overall_succ_rate, succ_rate_split, model_path, eval_eps):
