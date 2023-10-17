@@ -37,8 +37,9 @@ class NavEnv():
         self.env.state.rotation = 360 * np.random.random()
         self.goal_dist = 0
         relative_pose = []
-        while(self.goal_dist <= 1.5 or self.goal_dist > 3):
 
+        # while(self.goal_dist <= 1.5 or self.goal_dist > 3):
+        while(self.goal_dist < 3 or self.goal_dist > 5):
             # Initialize Goal Position
             self.goal = self.random_position()
 
@@ -114,7 +115,10 @@ class NavEnv():
 
         reward_orien = np.deg2rad(abs(curr_deg))
 
+        # Action Penalty
+        # reward_act = 0.05 if cmd[0] < -0.5 else 0
         # Total Reward
+        # reward = 0.1*reward_dist - 0.1*reward_orien - reward_act
         reward = 0.2 * reward_dist - 0.1 * reward_orien
 
         # Check Boundary
