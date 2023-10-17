@@ -146,7 +146,7 @@ class NavEnv():
         velocity = (action[0] + 1) / 2
         forward = round(velocity / 0.01)
         
-        turn = abs(round(action[1] / 0.2))
+        turn = abs(round(action[1] / 0.1))
 
         turn_action = 1 * turn  # turn right
 
