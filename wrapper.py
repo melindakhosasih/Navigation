@@ -279,7 +279,7 @@ class NavEnv():
     
     def _construct_state(self, relative_pose):
         # print("relative pose", relative_pose, end="\r")
-        return [relative_pose[0]/10, np.cos(np.deg2rad(relative_pose[1])), np.sin(np.deg2rad(relative_pose[1]))]
+        return [relative_pose[0]/50, np.cos(np.deg2rad(relative_pose[1])), np.sin(np.deg2rad(relative_pose[1]))]
 
     def plot_fig(self, overall_succ_rate, succ_rate_split, model_path, eval_eps):
         plt.plot(overall_succ_rate, label="Overall Training Succ")
