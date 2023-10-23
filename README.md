@@ -10,5 +10,10 @@ Tested in Python 3.11.4
     python wrapper.py --mode 0
 
 ## Train
+- Train ddpg
 
-    python train.py --title test
+    python train.py --title test --algo "ddpg"
+
+- Train sac
+
+    python train.py --title test --algo "sac"

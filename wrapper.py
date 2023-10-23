@@ -15,12 +15,7 @@ class NavEnv():
     def __init__(
             self,
             model,
-            # model=model.DDPG(
-            #     model = [model.PolicyNet, model.QNet],
-            #     learning_rate = [0.0001, 0.0001],
-            #     reward_decay = 0.99,
-            #     memory_size = 10000,
-            #     batch_size = 64)
+            algo,
             map=None,
             dt=1,
             type="basic",
@@ -29,6 +24,7 @@ class NavEnv():
         self.dt = dt
         self.sim_type = type
         self.model = model
+        self.algo = algo
 
     def initialize(self):
         # Initialize Agent Position
@@ -191,12 +187,22 @@ class NavEnv():
                 step += 1
                 total_step += 1
                 total_reward += reward
-                print(f"\rEps:{eps:3d} /{step:4d} /{total_step:6d}| "
+                if self.algo == "DDPG":
+                    print(f"\rEps:{eps:3d} /{step:4d} /{total_step:6d}| "
                       f"action_v:{action[0]:+.2f}| action_w:{action[1]:+.2f}| "
                       f"R:{reward:+.2f}| "
                       f"Loss:[A>{loss_a:+.2f} C>{loss_c:+.2f}]| "
                       f"Epsilon: {self.model.epsilon:.3f}| "
                       f"Ravg:{total_reward/step:.2f}", end='')
+                elif self.algo == "SAC":
+                    print(f"\rEps:{eps:3d} /{step:4d} /{total_step:6d}| "
+                      f"action_v:{action[0]:+.2f}| action_w:{action[1]:+.2f}| "
+                      f"R:{reward:+.2f}| "
+                      f"Loss:[A>{loss_a:+.2f} C>{loss_c:+.2f}]| "
+                      f"Alpha: {self.model.alpha:.3f}| "
+                      f"Ravg:{total_reward/step:.2f}", end='')
+                else:
+                    assert self.algo is None, "Algorithm doesn't exist"
 
                 state = state_next.copy()
                 if done or step>100:
@@ -226,7 +232,7 @@ class NavEnv():
                     self.model.save_load_model("save", model_path)
                 print(f"Success Rate (current/max): {success_rate}/{max_success_rate}")
                 # output GIF
-                self.eval(self.model, total_eps=4, gif_path=model_path+"/gif/", gif_name="ddpg_"+str(eps).zfill(4)+".gif", message=True)
+                self.eval(self.model, total_eps=4, gif_path=model_path+"/gif/", gif_name=f"{self.algo}_"+str(eps).zfill(4)+".gif", message=True)
 
     def eval(self, model, gif_path, gif_name, total_eps=4, message=False):
         if not os.path.exists(gif_path):
@@ -279,7 +285,7 @@ class NavEnv():
     
     def _construct_state(self, relative_pose):
         # print("relative pose", relative_pose, end="\r")
-        return [relative_pose[0]/50, np.cos(np.deg2rad(relative_pose[1])), np.sin(np.deg2rad(relative_pose[1]))]
+        return [relative_pose[0]/10, np.cos(np.deg2rad(relative_pose[1])), np.sin(np.deg2rad(relative_pose[1]))]
 
     def plot_fig(self, overall_succ_rate, succ_rate_split, model_path, eval_eps):
         plt.plot(overall_succ_rate, label="Overall Training Succ")
