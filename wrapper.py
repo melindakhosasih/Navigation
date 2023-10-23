@@ -114,7 +114,7 @@ class NavEnv():
         # Action Penalty
         reward_act = 0.05 if cmd[0] < -0.5 else 0
         # Total Reward
-        reward = 0.1*reward_dist - 0.5*reward_orien - reward_act
+        reward = 0.1*reward_dist - 0.2*reward_orien - reward_act
         # reward = 0.1 * reward_dist - 0.1 * reward_orien
 
         # Check Boundary
