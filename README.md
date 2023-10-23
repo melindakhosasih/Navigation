@@ -12,8 +12,8 @@ Tested in Python 3.11.4
 ## Train
 - Train ddpg
 
-    python train.py --title test --algo "ddpg"
+    python train.py --title test --algo ddpg
 
 - Train sac
 
-    python train.py --title test --algo "sac"
+    python train.py --title test --algo sac

@@ -114,7 +114,7 @@ class NavEnv():
         # Action Penalty
         reward_act = 0.05 if cmd[0] < -0.5 else 0
         # Total Reward
-        reward = 0.1*reward_dist - 0.1*reward_orien - reward_act
+        reward = 0.1*reward_dist - 0.5*reward_orien - reward_act
         # reward = 0.1 * reward_dist - 0.1 * reward_orien
 
         # Check Boundary
@@ -187,14 +187,14 @@ class NavEnv():
                 step += 1
                 total_step += 1
                 total_reward += reward
-                if self.algo == "DDPG":
+                if self.algo == "ddpg":
                     print(f"\rEps:{eps:3d} /{step:4d} /{total_step:6d}| "
                       f"action_v:{action[0]:+.2f}| action_w:{action[1]:+.2f}| "
                       f"R:{reward:+.2f}| "
                       f"Loss:[A>{loss_a:+.2f} C>{loss_c:+.2f}]| "
                       f"Epsilon: {self.model.epsilon:.3f}| "
                       f"Ravg:{total_reward/step:.2f}", end='')
-                elif self.algo == "SAC":
+                elif self.algo == "sac":
                     print(f"\rEps:{eps:3d} /{step:4d} /{total_step:6d}| "
                       f"action_v:{action[0]:+.2f}| action_w:{action[1]:+.2f}| "
                       f"R:{reward:+.2f}| "
