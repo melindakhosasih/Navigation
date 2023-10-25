@@ -16,5 +16,5 @@ class BasicAgent(AgentModel):
         w = cstate.w
         x = state.pos.x + v * np.cos(np.deg2rad(state.rotation)) * self.dt
         y = state.pos.y + v * np.sin(np.deg2rad(state.rotation)) * self.dt
-        rotation = (state.rotation + state.w * self.dt) % 360
+        rotation = (state.rotation + w * self.dt) % 360
         return State(x, y, rotation, v, w)

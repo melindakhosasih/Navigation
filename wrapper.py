@@ -310,7 +310,7 @@ if __name__ == "__main__":
     for i in range(5):
         env.initialize()
         while True:
-            key = cv2.waitKey(5)
+            key = cv2.waitKey(0)
             if key == 27: # ESC button
                 # print("exit")
                 break
