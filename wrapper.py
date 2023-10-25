@@ -25,6 +25,7 @@ class NavEnv():
         self.sim_type = type
         self.model = model
         self.algo = algo
+        self.prev_orien = 0.0
 
     def initialize(self):
         # Initialize Agent Position
@@ -109,13 +110,13 @@ class NavEnv():
         while curr_deg < -180:
             curr_deg += 360
 
-        reward_orien = np.deg2rad(abs(curr_deg))
+        reward_orien = self.prev_orien - np.deg2rad(abs(curr_deg))
 
         # Action Penalty
         reward_act = 0.05 if cmd[0] < -0.5 else 0
         # Total Reward
-        reward = 0.1*reward_dist - 0.2*reward_orien - reward_act
-        # reward = 0.1 * reward_dist - 0.1 * reward_orien
+        # reward = 0.1*reward_dist - 0.2*reward_orien - reward_act
+        reward = 0.1*reward_dist - 0.1*reward_orien
 
         # Check Boundary
         collision = False
@@ -136,6 +137,8 @@ class NavEnv():
 
         # Update distance
         self.goal_dist = curr_dist
+        # Update orientation
+        self.prev_orien = np.deg2rad(abs(curr_deg))
         return state_next, reward, done
     
     def translate_action(self, action):
