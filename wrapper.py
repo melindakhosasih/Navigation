@@ -306,15 +306,7 @@ if __name__ == "__main__":
     mode = ["random", "manual"]
     type = mode[args.mode]
 
-    model = model.DDPG(
-        model = [model.PolicyNet, model.QNet],
-            learning_rate = [0.0001, 0.0001],
-            reward_decay = 0.99,
-            memory_size = 10000,
-            batch_size = 64
-    )
-
-    env = NavEnv(model=model)
+    env = NavEnv(model=None, algo=None)
     for i in range(5):
         env.initialize()
         while True:
@@ -350,3 +342,4 @@ if __name__ == "__main__":
 
             if done:
                 break
+    cv2.destroyAllWindows()
