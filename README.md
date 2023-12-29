@@ -3,11 +3,26 @@
 ## Installation
 Tested in Python 3.11.4
 
-    pip install -r requirements.txt
+- conda
 
-## Environment Demo
+    conda env create -f nav.yaml
+    conda activate nav
+
+## Wrapper Test
+
+- Random Action
 
     python wrapper.py --mode 0
+
+- Control Manually
+
+    python wrapper.py --mode 1
+
+    - <kbd>W</kbd> : Move Forward
+    - <kbd>A</kbd> : Turn Left
+    - <kbd>D</kbd> : Turn Right
+    - <kbd>R</kbd> : Reset
+    - <kbd>Esc</kbd> : Exit
 
 ## Train
 - Train ddpg
