@@ -9,8 +9,6 @@ from simulator.utils import ControlState, Position, get_relative_pose
 
 from PIL import Image
 
-import model.model as model
-
 class NavEnv():
     def __init__(
             self,
@@ -305,23 +303,23 @@ if __name__ == "__main__":
 
     mode = ["random", "manual"]
     type = mode[args.mode]
+    exit = False
 
-    model = model.DDPG(
-        model = [model.PolicyNet, model.QNet],
-            learning_rate = [0.0001, 0.0001],
-            reward_decay = 0.99,
-            memory_size = 10000,
-            batch_size = 64
-    )
-
-    env = NavEnv(model=model)
+    env = NavEnv(model=None, algo=None)
     for i in range(5):
+        if exit:
+            break
         env.initialize()
         while True:
             key = cv2.waitKey(5)
             if key == 27: # ESC button
-                # print("exit")
+                print("exit")
+                exit = True
                 break
+            elif key == ord("r") or key == ord("R"):
+                # print("reset")
+                break
+
             if type == "random":
                 action = 2*np.random.random(2) - 1
             elif type == "manual":
@@ -331,9 +329,6 @@ if __name__ == "__main__":
                 elif key == ord("a") or key == ord("A"):
                     # print("turn left")
                     action = [-1, -1]
-                elif key == ord("s") or key == ord("S"):
-                    # print("move backward")
-                    action = [-1, 0]
                 elif key == ord("d") or key == ord("D"):
                     # print("turn right")
                     action = [-1, 1]

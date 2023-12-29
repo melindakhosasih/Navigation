@@ -1,7 +1,10 @@
 import os
 import cv2
 import argparse
+
 import model.model as model
+from algo.ddpg import DDPG
+from algo.sac import SAC
 
 from wrapper import NavEnv
 
@@ -25,7 +28,7 @@ if __name__ == "__main__":
         map = cv2.imread(args.map_path)
 
     if args.algo == "ddpg":
-        model = model.DDPG(
+        model = DDPG(
             model = [model.PolicyNet, model.QNet],
                 learning_rate = [0.0001, 0.0001],
                 reward_decay = 0.99,
@@ -33,7 +36,7 @@ if __name__ == "__main__":
                 batch_size = 64
         )
     elif args.algo == "sac":
-        model = model.SAC(
+        model = SAC(
             model = [model.PolicyNetGaussian, model.QNet],
             n_actions = 2,
             learning_rate = [0.0001, 0.0001],
