@@ -8,6 +8,11 @@ Tested in Python 3.11.4
     conda env create -f nav.yaml
     conda activate nav
 
+- pip
+
+    pip install -r requirements.txt
+
+
 ## Wrapper Test
 
 - Random Action
