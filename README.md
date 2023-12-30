@@ -47,3 +47,13 @@ Tested in Python 3.11.4
 - Evaluate sac
 
         python eval.py --result_name demo_sac --model_dir out/sac/test/ --algo sac
+
+## Demo
+
+- DDPG
+
+    <img src="demo/demo_ddpg.gif">
+
+- SAC
+
+    <img src="demo/demo_sac.gif">
