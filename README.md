@@ -37,3 +37,13 @@ Tested in Python 3.11.4
 - Train sac
 
     python train.py --title test --algo sac
+
+## Evaluation
+
+- Evaluate ddpg
+
+    python eval.py --result_name demo_ddpg --model_dir out/ddpg/test/ --algo ddpg
+
+- Evaluate sac
+
+    python eval.py --result_name demo_sac --model_dir out/sac/test/ --algo sac

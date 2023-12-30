@@ -1,19 +1,15 @@
-import os
 import cv2
 import numpy as np
 import argparse
-import matplotlib.pyplot as plt
 
 from simulator.basic import BasicSimulator as Simulator
 from simulator.utils import ControlState, Position, get_relative_pose
 
-from PIL import Image
-
 class NavEnv():
     def __init__(
             self,
-            model,
-            algo,
+            model=None,
+            algo=None,
             map=None,
             dt=1,
             type="basic",
@@ -152,152 +148,10 @@ class NavEnv():
 
         forward_action = forward * 0.1
         return [forward_action, turn_action]
-    
-    def train(self, model_path, episode=1001, batch_size=64, eval_eps=50):
-        total_step = 0
-        max_success_rate = 0
-        success_count = 0
-        total_succ_rate = []
-        overall_succ_rate = []
-        succ_rate_split = []
-        for eps in range(episode):
-            state = self.initialize()
-            step = 0
-            loss_a = loss_c = 0
-            total_reward = 0.
-            
-            while True:
-                # Choose action
-                action = self.model.choose_action(state, eval=False)
-
-                # Step
-                state_next, reward, done = self.step(self.translate_action(action))
-
-                # Store
-                end = 0 if done else 1
-                self.model.store_transition(state, action, reward, state_next, end)
-
-                # Render
-                # self.render(gui=False)
-
-                # Learn
-                loss_a = loss_c = 0.
-                if total_step > batch_size:
-                    loss_a, loss_c = self.model.learn()
-
-                step += 1
-                total_step += 1
-                total_reward += reward
-                if self.algo == "ddpg":
-                    print(f"\rEps:{eps:3d} /{step:4d} /{total_step:6d}| "
-                      f"action_v:{action[0]:+.2f}| action_w:{action[1]:+.2f}| "
-                      f"R:{reward:+.2f}| "
-                      f"Loss:[A>{loss_a:+.2f} C>{loss_c:+.2f}]| "
-                      f"Epsilon: {self.model.epsilon:.3f}| "
-                      f"Ravg:{total_reward/step:.2f}", end='')
-                elif self.algo == "sac":
-                    print(f"\rEps:{eps:3d} /{step:4d} /{total_step:6d}| "
-                      f"action_v:{action[0]:+.2f}| action_w:{action[1]:+.2f}| "
-                      f"R:{reward:+.2f}| "
-                      f"Loss:[A>{loss_a:+.2f} C>{loss_c:+.2f}]| "
-                      f"Alpha: {self.model.alpha:.3f}| "
-                      f"Ravg:{total_reward/step:.2f}", end='')
-                else:
-                    assert self.algo is None, "Algorithm doesn't exist"
-
-                state = state_next.copy()
-                if done or step>100:
-                    # Count the successful times
-                    if reward > 5:
-                        success_count += 1
-                        total_succ_rate.append(1)
-                    else:
-                        total_succ_rate.append(0)
-                    print()
-                    break
-            
-            overall_succ_rate.append(np.mean(total_succ_rate))
-            succ_rate_split.append(np.mean(total_succ_rate[-eval_eps:]))
-
-            self.plot_fig(overall_succ_rate, succ_rate_split, model_path, eval_eps)
-
-            if eps>0 and eps%eval_eps==0:
-                # Sucess rate
-                success_rate = success_count / eval_eps
-                success_count = 0
-
-                # Save the best model
-                if success_rate >= max_success_rate:
-                    max_success_rate = success_rate
-                    print("Save model to " + model_path)
-                    self.model.save_load_model("save", model_path)
-                print(f"Success Rate (current/max): {success_rate}/{max_success_rate}")
-                # output GIF
-                self.eval(self.model, total_eps=4, gif_path=model_path+"/gif/", gif_name=f"{self.algo}_"+str(eps).zfill(4)+".gif", message=True)
-
-    def eval(self, model, gif_path, gif_name, total_eps=4, message=False):
-        if not os.path.exists(gif_path):
-            os.makedirs(gif_path)
-
-        images = []
-        for eps in range(total_eps):
-            state = self.initialize()
-            step = 0
-            total_reward = 0.
-            while True:
-                # Choose action
-                action = self.model.choose_action(state, eval=False)
-
-                # Step
-                state_next, reward, done = self.step(self.translate_action(action))
-
-                # Render
-                img = self.render(gui=False)
-                img = Image.fromarray(cv2.cvtColor(np.uint8(img*255),cv2.COLOR_BGR2RGB))
-                images.append(img)
-
-                total_reward += reward
-
-                if message:
-                    print(f"\rEps:{eps:2d} /{step:4d} | action:{action[0]:+.2f}| "
-                          f"R:{reward:+.2f} | Total R:{total_reward:.2f}", end='')
-
-                state = state_next.copy()
-                step += 1
-
-                if done or step>100:
-                    # Count the successful times
-                    if message:
-                        print()
-                    break
-
-        print("Save evaluation GIF ...")
-        if gif_path is not None:
-            images[0].save(gif_path+gif_name,
-                save_all=True, append_images=images[1:], optimize=True, duration=40, loop=0)
-
-    # def _construct_state(self, relative_pose):
-    #     state = relative_pose.copy()
-    #     state[1] = np.deg2rad(state[1])
-    #     state = [relative_pose[0]*np.cos(state[1]), relative_pose[0]*np.sin(state[1])]
-    #     state[0] /= 5
-    #     state[1] /= 5
-    #     return state
-    
+       
     def _construct_state(self, relative_pose):
         # print("relative pose", relative_pose, end="\r")
         return [relative_pose[0]/10, np.cos(np.deg2rad(relative_pose[1])), np.sin(np.deg2rad(relative_pose[1]))]
-
-    def plot_fig(self, overall_succ_rate, succ_rate_split, model_path, eval_eps):
-        plt.plot(overall_succ_rate, label="Overall Training Succ")
-        plt.plot(succ_rate_split, label=f"Avg of {eval_eps} Episodes", linestyle='--')
-
-        plt.xlabel('Episode')
-        plt.ylabel('Succ')
-        plt.legend()
-
-        plt.savefig(f'{model_path}/training.png')
-        plt.close()
     
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
@@ -308,7 +162,7 @@ if __name__ == "__main__":
     type = mode[args.mode]
     exit = False
 
-    env = NavEnv(model=None, algo=None)
+    env = NavEnv()
     for i in range(5):
         if exit:
             break
